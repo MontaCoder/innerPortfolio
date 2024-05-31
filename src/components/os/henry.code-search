@@ -1,0 +1,22 @@
+# Query: henry
+# ContextLines: 1
+
+4 results - 2 files
+
+src\components\wordle\Wordle.tsx:
+  216  const Wordle: React.FC<WordleProps> = () => {
+  217:     const word = 'Montassar';
+  218      const [guesses, setGuesses] = useState<string[]>([]);
+
+  276                  <h2>Henordle</h2>
+  277:                 <p>Wordle but with a Montassar based twist.</p>
+  278              </div>
+
+  289                  <h2>{won ? 'You win!' : 'Game Over'}</h2>
+  290:                 <p>Thanks for playing! Remember: the word is always "MONTASSAR"!</p>
+  291                  <br />
+
+src\components\wordle\Words.ts:
+  3501      'sower',
+  3502:     'henry',
+  3503      'awash',
