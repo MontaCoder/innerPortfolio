@@ -44,11 +44,10 @@ const About: React.FC<AboutProps> = (props) => {
                     <img src={me} style={styles.image} alt="" />
                     <p>
                         <sub>
-                            <b>Figure 1:</b> A real photo of me when im at Elementary School :)
+                            <b>Figure 1:</b> A real photo of me ;)
                         </sub>
                     </p>
                 </div>
-
                 <p>
                     I started programming more seriously in high school,
                     initially learning how to scrape and interact with websites.
@@ -111,7 +110,7 @@ const About: React.FC<AboutProps> = (props) => {
                         target="_blank"
                         href="https://www.instagram.com/MontaCoder/"
                     >
-                        @haadijmldn
+                        @MontaCoder
                     </a>{' '}
                     Good luck and have fun!
                 </p>
