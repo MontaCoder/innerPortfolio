@@ -10,6 +10,11 @@ interface PlayerProps {
     bundleUrl: string;
 }
 
+const resolveBundleUrl = (bundleUrl: string) => {
+    const baseUrl = new URL(import.meta.env.BASE_URL, window.location.origin);
+    return new URL(bundleUrl, baseUrl).toString();
+};
+
 export default function DosPlayer(props: PlayerProps) {
     const rootRef = useRef<HTMLDivElement>(null);
 
@@ -21,14 +26,9 @@ export default function DosPlayer(props: PlayerProps) {
         }
 
         const root = rootRef.current as HTMLDivElement;
-        const instance = Dos(root);
+        const instance = Dos(root, { style: 'none' });
 
         setDos(instance);
-        const elements = rootRef.current.getElementsByClassName('flex-grow-0');
-
-        while (elements.length > 0) {
-            elements[0].remove();
-        }
 
         return () => {
             instance.stop();
@@ -37,16 +37,18 @@ export default function DosPlayer(props: PlayerProps) {
 
     useEffect(() => {
         if (dos !== null) {
-            dos.run(props.bundleUrl);
+            void dos.run(resolveBundleUrl(props.bundleUrl));
         }
     }, [dos, props.bundleUrl]);
     return (
         <div
             ref={rootRef}
             style={{
-                width: props.width,
-                height: props.height,
                 position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
             }}
         ></div>
     );

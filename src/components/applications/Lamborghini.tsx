@@ -14,7 +14,7 @@ const Lamborghini: React.FC<lamborghiniAppProps> = (props) => {
             left={10}
             width={width}
             height={height}
-            windowTitle="Fifa"
+            windowTitle="Lamborghini"
             windowBarColor="#1C1C1C"
             windowBarIcon="windowGameIcon"
             bottomLeftText={'Powered by JSDOS & DOSBox'}
@@ -24,7 +24,11 @@ const Lamborghini: React.FC<lamborghiniAppProps> = (props) => {
             onWidthChange={setWidth}
             onHeightChange={setHeight}
         >
-            <DosPlayer width={width} height={height} bundleUrl="fifa.jsdos" />
+            <DosPlayer
+                width={width}
+                height={height}
+                bundleUrl="lamborg.jsdos"
+            />
         </Window>
     );
 };
