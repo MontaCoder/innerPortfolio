@@ -1,26 +1,31 @@
-# Project Name
+# InnerPortfolio
 
-## Description
-A brief description of your project.
+Interactive portfolio website built as a retro desktop operating system experience.
 
-## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+## Stack
+- React 19 + TypeScript
+- Vite build pipeline
+- js-dos for embedded DOS experiences
 
-## Installation
-Instructions on how to install and set up your project.
+## Local Setup
+1. Install dependencies:
+	- `npm install`
+2. Create environment file:
+	- Copy `.env.example` to `.env.local`
+3. Fill required EmailJS values in `.env.local`:
+	- `VITE_EMAILJS_SERVICE_ID`
+	- `VITE_EMAILJS_TEMPLATE_ID`
+	- `VITE_EMAILJS_PUBLIC_KEY`
+4. Start dev server:
+	- `npm run dev`
 
-## Usage
-Guidelines on how to use your project.
+## Scripts
+- `npm run dev`: run development server
+- `npm run build`: build production bundle
+- `npm run preview`: preview production bundle
+- `npm test`: run tests
 
-## Contributing
-Information on how others can contribute to your project.
-
-## License
-Specify the license under which your project is distributed.
-
-## Contact
-Provide contact information for users to reach out to you.
+## Notes
+- Contact form uses EmailJS and requires environment variables to be configured.
+- If dependencies are missing in your shell, run `npm install` before building.
 

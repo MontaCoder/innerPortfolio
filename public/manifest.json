@@ -1,6 +1,6 @@
 {
     "short_name": "Montassar Hajri",
-    "name": "Montassar Hajri Portfolio Showcase 2024",
+    "name": "Montassar Hajri OS",
     "icons": [
         {
             "src": "favicon.ico",
@@ -8,8 +8,8 @@
             "type": "image/x-icon"
         }
     ],
-    "start_url": ".",
+    "start_url": "/",
     "display": "standalone",
-    "theme_color": "#000000",
-    "background_color": "#ffffff"
+    "theme_color": "#008081",
+    "background_color": "#008081"
 }
