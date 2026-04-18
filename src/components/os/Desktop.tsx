@@ -1,32 +1,34 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import Colors from '../../constants/colors';
-import ShowcaseExplorer from '../applications/ShowcaseExplorer';
-import Doom from '../applications/Doom';
-import OregonTrail from '../applications/OregonTrail';
 import ShutdownSequence from './ShutdownSequence';
-import kingsBeach from '../applications/KingsBeach';
-import Monopoly from '../applications/Monopoly';
-// import ThisComputer from '../applications/ThisComputer';
-import Henordle from '../applications/Henordle';
 import Toolbar from './Toolbar';
 import DesktopShortcut, { DesktopShortcutProps } from './DesktopShortcut';
-import Scrabble from '../applications/Scrabble';
 import { IconName } from '../../assets/icons';
-import Credits from '../applications/Credits';
-import meNow from '../../assets/pictures/currentme.jpg';
-import Fifa from '../applications/Fifa';
-import Lamborghini from '../applications/Lamborghini';
+
+const ShowcaseExplorer = lazy(() => import('../applications/ShowcaseExplorer'));
+const Doom = lazy(() => import('../applications/Doom'));
+const Scrabble = lazy(() => import('../applications/Scrabble'));
+const Credits = lazy(() => import('../applications/Credits'));
+const KingsBeach = lazy(() => import('../applications/KingsBeach'));
+const Monopoly = lazy(() => import('../applications/Monopoly'));
+const Fifa = lazy(() => import('../applications/Fifa'));
+const Lamborghini = lazy(() => import('../applications/Lamborghini'));
 
 export interface DesktopProps {}
 
 type ExtendedWindowAppProps<T> = T & WindowAppProps;
+type DesktopApplicationComponent =
+    | React.ComponentType<ExtendedWindowAppProps<any>>
+    | React.LazyExoticComponent<
+          React.ComponentType<ExtendedWindowAppProps<any>>
+      >;
 
 const APPLICATIONS: {
     [key in string]: {
         key: string;
         name: string;
         shortcutIcon: IconName;
-        component: React.FC<ExtendedWindowAppProps<any>>;
+        component: DesktopApplicationComponent;
     };
 } = {
     // computer: {
@@ -75,7 +77,7 @@ const APPLICATIONS: {
         key: 'kingsBeach',
         name: 'kingsBeach',
         shortcutIcon: 'kingsBeach',
-        component: kingsBeach,
+        component: KingsBeach,
     },
     monopoly: {
         key: 'monopoly',
@@ -215,7 +217,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
     }, [numShutdowns]);
 
     const addWindow = useCallback(
-        (key: string, element: JSX.Element) => {
+        (key: string, element: React.ReactElement<any>) => {
             setWindows((prevState) => ({
                 ...prevState,
                 [key]: {
@@ -245,11 +247,13 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                             windows[key].minimized && styles.minimized
                         )}
                     >
-                        {React.cloneElement(element, {
-                            key,
-                            onInteract: () => onWindowInteract(key),
-                            onClose: () => removeWindow(key),
-                        })}
+                        <Suspense fallback={<div style={styles.appLoading}>Loading app...</div>}>
+                            {React.cloneElement(element, {
+                                key,
+                                onInteract: () => onWindowInteract(key),
+                                onClose: () => removeWindow(key),
+                            })}
+                        </Suspense>
                     </div>
                 );
             })}
@@ -307,6 +311,16 @@ const styles: StyleSheetCSS = {
     minimized: {
         pointerEvents: 'none',
         opacity: 0,
+    },
+    appLoading: {
+        width: '100%',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.lightGray,
+        color: Colors.black,
+        fontFamily: 'MSSerif',
+        fontSize: 14,
     },
 };
 

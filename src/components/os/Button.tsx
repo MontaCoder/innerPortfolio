@@ -33,17 +33,18 @@ const Button: React.FC<ButtonProps> = ({ icon, text, onClick }) => {
         text && { padding: 4 }
     );
 
-    const click = (e: any) => {
+    const click = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         onClick && onClick();
     };
 
     return (
-        <div
+        <button
+            type="button"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             style={outerBorderStyle}
-            onMouseDown={click}
+            onClick={click}
         >
             <div
                 style={Object.assign(
@@ -60,7 +61,7 @@ const Button: React.FC<ButtonProps> = ({ icon, text, onClick }) => {
                     <p>{text}</p>
                 )}
             </div>
-        </div>
+        </button>
     );
 };
 
@@ -72,6 +73,9 @@ const styles: StyleSheetCSS = {
         background: Colors.lightGray,
 
         cursor: 'pointer',
+        appearance: 'none',
+        padding: 0,
+        display: 'flex',
     },
     innerBorder: {
         border: `1px solid ${Colors.darkGray}`,

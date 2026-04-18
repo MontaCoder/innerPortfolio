@@ -24,7 +24,7 @@ export interface WindowProps {
     onHeightChange?: (height: number) => void;
 }
 
-const Window: React.FC<WindowProps> = (props) => {
+const Window = (props: React.PropsWithChildren<WindowProps>) => {
     const windowRef = useRef<any>(null);
     const dragRef = useRef<any>(null);
     const contentRef = useRef<any>(null);
@@ -32,7 +32,7 @@ const Window: React.FC<WindowProps> = (props) => {
     const dragProps = useRef<{
         dragStartX: any;
         dragStartY: any;
-    }>();
+    } | null>(null);
 
     const resizeRef = useRef<any>(null);
 

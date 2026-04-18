@@ -1,5 +1,3 @@
-import React from 'react';
-
 import windowResize from './windowResize.png';
 import maximize from './maximize.png';
 import minimize from './minimize.png';
@@ -51,7 +49,6 @@ export type IconName = keyof typeof icons;
 
 const getIconByName = (
     iconName: IconName
-    // @ts-ignore
-): React.FC<React.SVGAttributes<SVGElement>> => icons[iconName];
+): string => icons[iconName];
 
 export default getIconByName;

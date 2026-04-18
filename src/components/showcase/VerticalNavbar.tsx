@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from '../general';
-import forHire from '../../assets/pictures/forHireGif.gif';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export interface VerticalNavbarProps {}
 
-const VerticalNavbar: React.FC<VerticalNavbarProps> = (props) => {
+const VerticalNavbar: React.FC<VerticalNavbarProps> = () => {
     const location = useLocation();
     const [projectsExpanded, setProjectsExpanded] = useState(false);
     const [isHome, setIsHome] = useState(false);
@@ -42,7 +41,7 @@ const VerticalNavbar: React.FC<VerticalNavbarProps> = (props) => {
                 <Link
                     containerStyle={styles.link}
                     to="experience"
-                    text="EXPERIENCE"
+                    text="FREELANCE"
                 />
                 <Link
                     containerStyle={Object.assign(
@@ -82,7 +81,7 @@ const VerticalNavbar: React.FC<VerticalNavbarProps> = (props) => {
                 />
             </div>
             <div style={styles.spacer} />
-            <div style={styles.forHireContainer} onMouseDown={goToContact}>
+            <div style={styles.forHireContainer} onClick={goToContact}>
                 {/* <img src={forHire} style={styles.image} alt="" /> */}
             </div>
         </div>

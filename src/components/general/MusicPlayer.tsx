@@ -18,20 +18,43 @@ export interface MusicPlayerProps {
 
 const MusicPlayer: React.FC<MusicPlayerProps> = (props) => {
     const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef(new Audio(props.src));
+    const audioRef = useRef<HTMLAudioElement>(new Audio(props.src));
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(1);
 
     // set current time
     useEffect(() => {
-        audioRef.current.addEventListener('timeupdate', () => {
-            setCurrentTime(audioRef.current.currentTime);
-            setDuration(audioRef.current.duration);
-            if (audioRef.current.currentTime === audioRef.current.duration) {
+        const audio = audioRef.current;
+
+        const onTimeUpdate = () => {
+            setCurrentTime(audio.currentTime);
+            setDuration(
+                Number.isFinite(audio.duration) && audio.duration > 0
+                    ? audio.duration
+                    : 1
+            );
+            if (
+                Number.isFinite(audio.duration) &&
+                audio.currentTime >= audio.duration
+            ) {
                 setIsPlaying(false);
             }
-        });
+        };
+
+        audio.addEventListener('timeupdate', onTimeUpdate);
+
+        return () => {
+            audio.removeEventListener('timeupdate', onTimeUpdate);
+        };
     }, []);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        audio.src = props.src;
+        audio.currentTime = 0;
+        setCurrentTime(0);
+        setDuration(1);
+    }, [props.src]);
 
     // fast fowrad 15 seconds
     const fastForward = () => {
@@ -96,7 +119,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = (props) => {
                         animate={isPlaying ? 'play' : 'pause'}
                         src={CDIcon}
                         style={styles.cd}
-                        onMouseDown={togglePlay}
+                        onClick={togglePlay}
                         alt=""
                     />
                 </div>
@@ -128,7 +151,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = (props) => {
                         <div
                             style={styles.controlButton}
                             className="site-button"
-                            onMouseDown={fastRewind}
+                            onClick={fastRewind}
                         >
                             <img
                                 src={RewindIcon}
@@ -139,7 +162,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = (props) => {
                         <div
                             style={styles.controlButton}
                             className="site-button"
-                            onMouseDown={togglePlay}
+                            onClick={togglePlay}
                         >
                             <img
                                 src={isPlaying ? PauseIcon : PlayIcon}
@@ -150,7 +173,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = (props) => {
                         <div
                             style={styles.controlButton}
                             className="site-button"
-                            onMouseDown={fastForward}
+                            onClick={fastForward}
                         >
                             <img
                                 src={ForwardIcon}

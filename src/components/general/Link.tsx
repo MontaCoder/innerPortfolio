@@ -1,6 +1,8 @@
 import React from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import { useRef } from 'react';
+import { useCallback } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 
 export interface LinkProps {
@@ -24,34 +26,53 @@ const Link: React.FC<LinkProps> = (props) => {
         } else {
             setIsHere(false);
         }
-        return () => {};
     }, [location, props.to]);
 
     const [active, setActive] = useState(false);
+    const navigateTimerRef = useRef<number | null>(null);
+    const activeTimerRef = useRef<number | null>(null);
 
-    const handleClick = (e: any) => {
-        let isMounted = true;
+    const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         setActive(true);
+
+        if (navigateTimerRef.current !== null) {
+            window.clearTimeout(navigateTimerRef.current);
+            navigateTimerRef.current = null;
+        }
+        if (activeTimerRef.current !== null) {
+            window.clearTimeout(activeTimerRef.current);
+            activeTimerRef.current = null;
+        }
+
         if (location.pathname !== `/${props.to}`) {
-            setTimeout(() => {
-                if (isMounted) navigate(`/${props.to}`);
+            navigateTimerRef.current = window.setTimeout(() => {
+                navigate(`/${props.to}`);
+                navigateTimerRef.current = null;
             }, 100);
         }
-        let t = setTimeout(() => {
-            if (isMounted) setActive(false);
-        }, 100);
 
+        activeTimerRef.current = window.setTimeout(() => {
+            setActive(false);
+            activeTimerRef.current = null;
+        }, 100);
+    }, [location.pathname, navigate, props.to]);
+
+    useEffect(() => {
         return () => {
-            isMounted = false;
-            clearTimeout(t);
+            if (navigateTimerRef.current !== null) {
+                window.clearTimeout(navigateTimerRef.current);
+            }
+            if (activeTimerRef.current !== null) {
+                window.clearTimeout(activeTimerRef.current);
+            }
         };
-    };
+    }, []);
 
     return (
         <RouterLink
             to={`/${props.to}`}
-            onMouseDown={handleClick}
+            onClick={handleClick}
             style={Object.assign({}, { display: 'flex' }, props.containerStyle)}
         >
             {isHere && <div style={styles.hereIndicator} />}

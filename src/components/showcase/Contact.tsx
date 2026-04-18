@@ -3,7 +3,6 @@ import colors from '../../constants/colors';
 import twitterIcon from '../../assets/pictures/contact-twitter.png';
 import ghIcon from '../../assets/pictures/contact-gh.png';
 import inIcon from '../../assets/pictures/contact-in.png';
-import ResumeDownload from './ResumeDownload';
 import emailjs from '@emailjs/browser';
 
 export interface ContactProps {}
@@ -19,11 +18,12 @@ const validateEmail = (email: string) => {
 interface SocialBoxProps {
     icon: string;
     link: string;
+    label: string;
 }
 
-const SocialBox: React.FC<SocialBoxProps> = ({ link, icon }) => {
+const SocialBox: React.FC<SocialBoxProps> = ({ link, icon, label }) => {
     return (
-        <a rel="noreferrer" target="_blank" href={link}>
+        <a rel="noreferrer" target="_blank" href={link} aria-label={label}>
             <div className="big-button-container" style={styles.social}>
                 <img src={icon} alt="" style={styles.socialImage} />
             </div>
@@ -31,7 +31,7 @@ const SocialBox: React.FC<SocialBoxProps> = ({ link, icon }) => {
     );
 };
 
-const Contact: React.FC<ContactProps> = (props) => {
+const Contact: React.FC<ContactProps> = () => {
     const [company, setCompany] = useState('');
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
@@ -40,6 +40,10 @@ const Contact: React.FC<ContactProps> = (props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [formMessage, setFormMessage] = useState('');
     const [formMessageColor, setFormMessageColor] = useState('');
+
+    const emailServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const emailTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const emailPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     useEffect(() => {
         if (validateEmail(email) && name.length > 0 && message.length > 0) {
@@ -50,16 +54,28 @@ const Contact: React.FC<ContactProps> = (props) => {
     }, [email, name, message]);
 
     const handleSubmit = useCallback(() => {
+        if (!emailServiceId || !emailTemplateId || !emailPublicKey) {
+            setFormMessage(
+                'Contact form is temporarily unavailable. Please email me directly.'
+            );
+            setFormMessageColor(colors.red);
+            return;
+        }
+
         if (isFormValid) {
             setIsLoading(true);
-            emailjs.send('service_y3ctu6p', 'template_kdxkk9b', {
-                company,
-                email,
-                name,
-                message,
-            },
-                'IrUpIov5mMNvUvc4T'
-            )
+            emailjs
+                .send(
+                    emailServiceId,
+                    emailTemplateId,
+                    {
+                        company,
+                        email,
+                        name,
+                        message,
+                    },
+                    emailPublicKey
+                )
                 .then((res) => {
                     if (res.status === 200) {
                         setFormMessage(
@@ -79,7 +95,7 @@ const Contact: React.FC<ContactProps> = (props) => {
                         setIsLoading(false);
                     }
                 })
-                .catch((err) => {
+                .catch(() => {
                     setFormMessage(
                         'There was an error sending your message. Please try again.'
                     );
@@ -88,17 +104,30 @@ const Contact: React.FC<ContactProps> = (props) => {
                 });
         } else {
             setFormMessage('Form unable to validate, please try again.');
-            setFormMessageColor('red');
+            setFormMessageColor(colors.red);
         }
-    }, [company, email, name, message, isFormValid]);
+    }, [
+        company,
+        email,
+        name,
+        message,
+        isFormValid,
+        emailServiceId,
+        emailTemplateId,
+        emailPublicKey,
+    ]);
 
     useEffect(() => {
-        if (formMessage.length > 0) {
-            setTimeout(() => {
-                setFormMessage('');
-                setFormMessageColor('');
-            }, 4000);
-        }
+        if (formMessage.length === 0) return;
+
+        const timerId = window.setTimeout(() => {
+            setFormMessage('');
+            setFormMessageColor('');
+        }, 4000);
+
+        return () => {
+            window.clearTimeout(timerId);
+        };
     }, [formMessage]);
 
     return (
@@ -109,21 +138,24 @@ const Contact: React.FC<ContactProps> = (props) => {
                     <SocialBox
                         icon={ghIcon}
                         link={'https://github.com/MontaCoder'}
+                        label={'Open GitHub profile'}
                     />
                     <SocialBox
                         icon={inIcon}
                         link={'https://www.linkedin.com/in/montassarhajri/'}
+                        label={'Open LinkedIn profile'}
                     />
                     <SocialBox
                         icon={twitterIcon}
                         link={'https://www.instagram.com/MontaCoder/'}
+                        label={'Open Instagram profile'}
                     />
                 </div>
             </div>
             <div className="text-block">
                 <p>
-                    I am currently Freelance, however if you have any
-                    opportunities, feel free to reach out - I would love to
+                    I am currently open to freelance work, however if you have
+                    any opportunities, feel free to reach out - I would love to
                     chat! You can reach me via my personal email, or fill out
                     the form below!
                 </p>
@@ -136,13 +168,14 @@ const Contact: React.FC<ContactProps> = (props) => {
                 </p>
 
                 <div style={styles.form}>
-                    <label>
+                    <label htmlFor="contact-name">
                         <p>
                             {!name && <span style={styles.star}>*</span>}
                             <b>Your name:</b>
                         </p>
                     </label>
                     <input
+                        id="contact-name"
                         style={styles.formItem}
                         type="text"
                         name="name"
@@ -150,7 +183,7 @@ const Contact: React.FC<ContactProps> = (props) => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
-                    <label>
+                    <label htmlFor="contact-email">
                         <p>
                             {!validateEmail(email) && (
                                 <span style={styles.star}>*</span>
@@ -159,6 +192,7 @@ const Contact: React.FC<ContactProps> = (props) => {
                         </p>
                     </label>
                     <input
+                        id="contact-email"
                         style={styles.formItem}
                         type="email"
                         name="email"
@@ -166,26 +200,28 @@ const Contact: React.FC<ContactProps> = (props) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                    <label>
+                    <label htmlFor="contact-company">
                         <p>
                             <b>Company (optional):</b>
                         </p>
                     </label>
                     <input
+                        id="contact-company"
                         style={styles.formItem}
-                        type="company"
+                        type="text"
                         name="company"
                         placeholder="Company"
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                     />
-                    <label>
+                    <label htmlFor="contact-message">
                         <p>
                             {!message && <span style={styles.star}>*</span>}
                             <b>Message:</b>
                         </p>
                     </label>
                     <textarea
+                        id="contact-message"
                         name="message"
                         placeholder="Message"
                         style={styles.formItem}
@@ -198,7 +234,7 @@ const Contact: React.FC<ContactProps> = (props) => {
                             style={styles.button}
                             type="submit"
                             disabled={!isFormValid || isLoading}
-                            onMouseDown={handleSubmit}
+                            onClick={handleSubmit}
                         >
                             {!isLoading ? (
                                 'Send Message'
@@ -237,7 +273,6 @@ const Contact: React.FC<ContactProps> = (props) => {
                     </div>
                 </div>
             </div>
-            <ResumeDownload altText="Need a copy of my Resume?" />
         </div>
     );
 };

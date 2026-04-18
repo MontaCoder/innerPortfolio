@@ -2,157 +2,228 @@ import React from 'react';
 import me from '../../assets/pictures/currentme.webp';
 import meNow from '../../assets/pictures/workingAtComputer.png';
 import { Link } from 'react-router-dom';
-import ResumeDownload from './ResumeDownload';
 
 export interface AboutProps {}
 
-const About: React.FC<AboutProps> = (props) => {
+const SYSTEM_FACTS = [
+    ['Name', 'Montassar Hajri'],
+    ['Role', 'Software Engineer'],
+    ['Focus', 'Web apps, tooling, and UX systems'],
+    ['Mode', 'Build fast, polish hard'],
+];
+
+const HOBBIES = [
+    'Music production',
+    'Digital art',
+    'Strength training',
+    'Cooking',
+    'Retro and modern games',
+];
+
+const About: React.FC<AboutProps> = () => {
     return (
-        // add on resize listener
         <div className="site-page-content">
-            {/* <img src={me} style={styles.topImage} alt="" /> */}
-            <h1 style={{ marginLeft: -16 }}>Welcome</h1>
-            <h3>I'm Montassar Hajri</h3>
-            <br />
-            <div className="text-block">
-                <p>
-                    I'm a software engineer
-                </p>
-                <br />
-                <p>
-                    Thank you for taking the time to check out my portfolio. I
-                    really hope you enjoy exploring it as much as I enjoyed
-                    building it. If you have any questions or comments, feel
-                    free to contact me using{' '}
-                    <Link to="/contact">this form</Link> or shoot me an email at{' '}
-                    <a href="mailto:montassarhajri@outlook.com">
-                        montassarhajri@outlook.com
-                    </a>
-                </p>
+            <h1 style={styles.title}>About</h1>
+            <h3>Montassar Hajri</h3>
+
+            <div style={styles.panelOuter}>
+                <div style={styles.panelInner}>
+                    <div style={styles.panelTopBar}>
+                        <p className="showcase-header">SYSTEM PROFILE</p>
+                    </div>
+                    <div style={styles.panelBody}>
+                        <div style={styles.panelImageSection}>
+                            <img
+                                src={me}
+                                style={styles.profileImage}
+                                alt="Portrait of Montassar Hajri"
+                            />
+                            <p style={styles.caption}>
+                                <sub>
+                                    <b>Snapshot:</b> Builder mode always on
+                                </sub>
+                            </p>
+                        </div>
+                        <div style={styles.panelInfoSection}>
+                            <p>
+                                I build software that feels playful to use,
+                                reliable in production, and memorable after the
+                                first click.
+                            </p>
+                            <br />
+                            {SYSTEM_FACTS.map(([label, value]) => (
+                                <div key={label} style={styles.factRow}>
+                                    <p style={styles.factLabel}>{label}</p>
+                                    <p>{value}</p>
+                                </div>
+                            ))}
+                            <br />
+                            <p>
+                                Want to collaborate? Open the{' '}
+                                <Link to="/contact">contact page</Link> or email{' '}
+                                <a href="mailto:montassarhajri@outlook.com">
+                                    montassarhajri@outlook.com
+                                </a>
+                                .
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <ResumeDownload />
-            <div className="text-block">
-                <h3>About Me</h3>
-                <br />
-                <p>
-                    From a young age, I have had a curiosity about how things
-                    worked. This naturally led me to become absolutely obsessed
-                    with Lego and I fell in love with building things.
-                </p>
-                <br />
-                <div className="captioned-image">
-                    <img src={me} style={styles.image} alt="" />
+
+            <div style={styles.infoGrid}>
+                <div className="big-button-container" style={styles.infoCard}>
+                    <div style={styles.infoCardBody}>
+                        <h3>Origin Story</h3>
+                        <br />
+                        <p>
+                            My curiosity for how things work started with LEGO,
+                            then moved into web experiments, then into full
+                            products and game-inspired interfaces.
+                        </p>
+                        <br />
+                        <p>
+                            Today I focus on creating software that balances
+                            personality with performance.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="big-button-container" style={styles.infoCard}>
+                    <div style={styles.infoCardBody}>
+                        <h3>Outside Coding</h3>
+                        <br />
+                        {HOBBIES.map((hobby) => (
+                            <p key={hobby} style={styles.hobbyLine}>
+                                - {hobby}
+                            </p>
+                        ))}
+                        <br />
+                        <p>
+                            More project context lives in{' '}
+                            <Link to="/projects/software">Software Projects</Link>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div style={styles.nowSection}>
+                <img
+                    src={meNow}
+                    style={styles.nowImage}
+                    alt="Montassar working at a computer"
+                />
+                <div style={styles.nowText}>
+                    <h3>Currently</h3>
+                    <br />
                     <p>
-                        <sub>
-                            <b>Figure 1:</b> A real photo of me ;)
-                        </sub>
+                        Shipping interactive portfolio experiences with a
+                        Windows-95-inspired shell and modern frontend
+                        architecture behind the scenes.
                     </p>
                 </div>
-                <p>
-                    I started programming more seriously in high school,
-                    initially learning how to scrape and interact with websites.
-                    I went on to do a ton of passion projects, many of them with
-                    one of my closest friends
-                    . We worked on many projects together, including chat bots,
-                    multiple game projects, apps, and more. One of these
-                    projects is viewable on my{' '}
-                    <Link to="/projects/software">Software Projects</Link> page.
-                </p>
-                <br />
-                <br />
-                <br />
-                <div style={{}}>
-                    <div
-                        style={{
-                            flex: 1,
-                            textAlign: 'justify',
-                            alignSelf: 'center',
-                            flexDirection: 'column',
-                        }}
-                    >
-                        <h3>My Hobbies</h3>
-                        <br />
-                        <p>
-                            Beyond software, I have a lot of hobbies that I
-                            enjoy doing in my free time. The more tangible
-                            hobbies I have are Music
-                            and creating
-                            Digital Art. Some other hobbies I
-                            enjoy are working out, cooking, and (unsurprisingly)
-                            playing video games.
-                        </p>
-                        <br />
-                        {/* <p>
-                            In college, I was an active member in the fraternity
-                            Sigma Alpha Epsilon and held multiple positions in
-                            the chapter. I met a lot of amazing people through
-                            my fraternity and thoroughly enjoyed the community.
-                        </p> */}
-                    </div>
-                    <div style={styles.verticalImage}>
-                        <img src={meNow} style={styles.image} alt="" />
-                        <p>
-                            <sub>
-                                <b>Figure 2:</b> Me, April 2022
-                            </sub>
-                        </p>
-                    </div>
-                </div>
-                <br />
-                <br />
-                <p>
-                    Thanks for reading about me! I hope that you enjoy exploring
-                    the rest of my portfolio website and everything it has to
-                    offer. If you find the easter egg make sure to let me know
-                    on Instagram{' '}
-                    <a
-                        rel="noreferrer"
-                        target="_blank"
-                        href="https://www.instagram.com/MontaCoder/"
-                    >
-                        @MontaCoder
-                    </a>{' '}
-                    Good luck and have fun!
-                </p>
-                <br />
-                <p>
-                    If you have any questions or comments I would love to hear
-                    them. You can reach me through the{' '}
-                    <Link to="/contact">contact page</Link> or shoot me an email
-                    at{' '}
-                    <a href="mailto:montassarhajri@outlook.com">
-                        montassarhajri@outlook.com
-                    </a>
-                </p>
             </div>
         </div>
     );
 };
 
 const styles: StyleSheetCSS = {
-    contentHeader: {
-        marginBottom: 16,
-        fontSize: 48,
+    title: {
+        marginLeft: -8,
     },
-    image: {
-        height: 'auto',
+    panelOuter: {
+        marginTop: 16,
+        marginBottom: 24,
+        border: '1px solid #000',
+        borderTopColor: '#fff',
+        borderLeftColor: '#fff',
+        backgroundColor: '#c0c0c0',
         width: '100%',
     },
-    topImage: {
-        height: 'auto',
-        width: '100%',
-        marginBottom: 32,
-    },
-    verticalImage: {
-        alignSelf: 'center',
-        // width: '80%',
-        marginLeft: 32,
-        flex: 0.8,
-
-        alignItems: 'center',
-        // marginBottom: 32,
-        textAlign: 'center',
+    panelInner: {
+        border: '1px solid #808080',
+        borderTopColor: '#dfdfdf',
+        borderLeftColor: '#dfdfdf',
         flexDirection: 'column',
+        width: '100%',
+    },
+    panelTopBar: {
+        backgroundColor: '#000080',
+        height: 24,
+        alignItems: 'center',
+        paddingLeft: 8,
+    },
+    panelBody: {
+        padding: 12,
+        gap: 16,
+        width: '100%',
+    },
+    panelImageSection: {
+        width: 240,
+        flexShrink: 0,
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+    panelInfoSection: {
+        flexDirection: 'column',
+        flex: 1,
+    },
+    profileImage: {
+        width: '100%',
+        height: 'auto',
+        border: '2px solid #000',
+    },
+    caption: {
+        textAlign: 'center',
+        marginTop: 8,
+    },
+    factRow: {
+        justifyContent: 'space-between',
+        borderBottom: '1px dashed #808080',
+        paddingTop: 4,
+        paddingBottom: 4,
+        gap: 16,
+    },
+    factLabel: {
+        fontFamily: 'MillenniumBold',
+        minWidth: 96,
+    },
+    infoGrid: {
+        width: '100%',
+        gap: 12,
+        marginBottom: 20,
+        alignItems: 'stretch',
+    },
+    infoCard: {
+        flex: 1,
+        width: '100%',
+    },
+    infoCardBody: {
+        flexDirection: 'column',
+        width: '100%',
+    },
+    hobbyLine: {
+        marginBottom: 6,
+    },
+    nowSection: {
+        width: '100%',
+        gap: 12,
+        marginBottom: 24,
+        padding: 12,
+        border: '1px solid #808080',
+        borderTopColor: '#fff',
+        borderLeftColor: '#fff',
+        backgroundColor: '#efefef',
+    },
+    nowImage: {
+        width: 220,
+        height: 'auto',
+        border: '1px solid #000',
+        flexShrink: 0,
+    },
+    nowText: {
+        flexDirection: 'column',
+        flex: 1,
     },
 };
 

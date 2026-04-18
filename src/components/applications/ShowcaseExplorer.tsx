@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from '../showcase/Home';
-import About from '../showcase/About';
 import Window from '../os/Window';
-import Experience from '../showcase/Experience';
-import Projects from '../showcase/Projects';
-import Contact from '../showcase/Contact';
-import SoftwareProjects from '../showcase/projects/Software';
-import MusicProjects from '../showcase/projects/Music';
-import ArtProjects from '../showcase/projects/Art';
 import VerticalNavbar from '../showcase/VerticalNavbar';
 import useInitialWindowSize from '../../hooks/useInitialWindowSize';
+
+const Home = lazy(() => import('../showcase/Home'));
+const About = lazy(() => import('../showcase/About'));
+const Experience = lazy(() => import('../showcase/Experience'));
+const Projects = lazy(() => import('../showcase/Projects'));
+const Contact = lazy(() => import('../showcase/Contact'));
+const SoftwareProjects = lazy(() => import('../showcase/projects/Software'));
+const MusicProjects = lazy(() => import('../showcase/projects/Music'));
+const ArtProjects = lazy(() => import('../showcase/projects/Art'));
 
 export interface ShowcaseExplorerProps extends WindowAppProps {}
 
@@ -33,22 +34,24 @@ const ShowcaseExplorer: React.FC<ShowcaseExplorerProps> = (props) => {
             <Router>
                 <div className="site-page">
                     <VerticalNavbar />
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/experience" element={<Experience />} />
-                        <Route path="/projects" element={<Projects />} />
-                        <Route path="/contact" element={<Contact />} />
-                        <Route
-                            path="/projects/software"
-                            element={<SoftwareProjects />}
-                        />
-                        <Route
-                            path="/projects/music"
-                            element={<MusicProjects />}
-                        />
-                        <Route path="/projects/art" element={<ArtProjects />} />
-                    </Routes>
+                    <Suspense fallback={<div className="site-page-content">Loading...</div>}>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/experience" element={<Experience />} />
+                            <Route path="/projects" element={<Projects />} />
+                            <Route path="/contact" element={<Contact />} />
+                            <Route
+                                path="/projects/software"
+                                element={<SoftwareProjects />}
+                            />
+                            <Route
+                                path="/projects/music"
+                                element={<MusicProjects />}
+                            />
+                            <Route path="/projects/art" element={<ArtProjects />} />
+                        </Routes>
+                    </Suspense>
                 </div>
             </Router>
         </Window>

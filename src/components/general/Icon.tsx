@@ -18,7 +18,7 @@ const Icon: React.FC<IconProps> = ({ icon, style, size }) => {
         <img
             style={iconStyle}
             alt={''}
-            src={getIconByName(icon) as unknown as string}
+            src={getIconByName(icon)}
         />
     );
 };

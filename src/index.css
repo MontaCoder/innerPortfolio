@@ -10,7 +10,9 @@ body {
 html, body {
     background-color: #008081;
     background-image: url("./assets/pictures/wallpaper.png");
-    background-size: 1280px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 code {
@@ -41,7 +43,10 @@ code {
 }
 
 
-* {
+.site-button,
+.desktop-shortcut-icon,
+.toolbar-text,
+.showcase-header {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -176,8 +181,16 @@ textarea:focus,
 textarea:active,
 input:focus,
 input:active {
-    outline: none;
     background-color: #fbffc4;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible {
+    outline: 2px solid #0000aa;
+    outline-offset: 2px;
 }
 
 .button-border {
@@ -401,4 +414,31 @@ input:active {
     background-color: #0000aa;
     cursor: pointer;
     color: white;
+}
+
+@media (max-width: 900px) {
+    .site-page {
+        position: relative;
+        overflow-y: auto;
+    }
+
+    .site-page-content {
+        margin-left: 0;
+        padding: 24px 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .rainbow-wrapper {
+        animation: none !important;
+    }
 }

@@ -23,6 +23,17 @@ div {
     height: 100%;
 }
 
+@media (max-width: 900px) {
+    .App {
+        overflow-y: auto;
+    }
+
+    html,
+    body {
+        overflow: auto;
+    }
+}
+
 .white {
     color: #fff;
 }

@@ -3,6 +3,11 @@ import { IconName } from '../../assets/icons';
 import colors from '../../constants/colors';
 import { Icon } from '../general';
 
+const iconMaskUrls = import.meta.glob('../../assets/icons/*.png', {
+    eager: true,
+    import: 'default',
+}) as Record<string, string>;
+
 export interface DesktopShortcutProps {
     icon: IconName;
     shortcutName: string;
@@ -19,12 +24,14 @@ const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
     const [isSelected, setIsSelected] = useState(false);
     const [shortcutId, setShortcutId] = useState('');
     const [lastSelected, setLastSelected] = useState(false);
-    const containerRef = useRef<any>();
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     const [scaledStyle, setScaledStyle] = useState({});
 
-    const requiredIcon = require(`../../assets/icons/${icon}.png`);
+    const requiredIcon =
+        iconMaskUrls[`../../assets/icons/${icon}.png`] ?? '';
     const [doubleClickTimerActive, setDoubleClickTimerActive] = useState(false);
+    const doubleClickTimerRef = useRef<number | null>(null);
 
     const getShortcutId = useCallback(() => {
         const shortcutId = shortcutName.replace(/\s/g, '');
@@ -70,16 +77,31 @@ const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
             onOpen && onOpen();
             setIsSelected(false);
             setDoubleClickTimerActive(false);
+            if (doubleClickTimerRef.current !== null) {
+                window.clearTimeout(doubleClickTimerRef.current);
+                doubleClickTimerRef.current = null;
+            }
             return;
         }
         setIsSelected(true);
         setLastSelected(true);
         setDoubleClickTimerActive(true);
         // set double click timer
-        setTimeout(() => {
+        doubleClickTimerRef.current = window.setTimeout(() => {
             setDoubleClickTimerActive(false);
+            doubleClickTimerRef.current = null;
         }, 300);
     }, [doubleClickTimerActive, setIsSelected, onOpen]);
+
+    const handleShortcutKeyDown = useCallback(
+        (event: React.KeyboardEvent<HTMLDivElement>) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onOpen();
+            }
+        },
+        [onOpen]
+    );
 
     useEffect(() => {
         document.addEventListener('mousedown', handleClickOutside);
@@ -88,11 +110,23 @@ const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
         };
     }, [isSelected, handleClickOutside]);
 
+    useEffect(() => {
+        return () => {
+            if (doubleClickTimerRef.current !== null) {
+                window.clearTimeout(doubleClickTimerRef.current);
+            }
+        };
+    }, []);
+
     return (
         <div
             id={`${shortcutId}`}
             style={Object.assign({}, styles.appShortcut, scaledStyle)}
-            onMouseDown={handleClickShortcut}
+            onClick={handleClickShortcut}
+            onKeyDown={handleShortcutKeyDown}
+            tabIndex={0}
+            role="button"
+            aria-label={`Open ${shortcutName}`}
             ref={containerRef}
         >
             <div id={`${shortcutId}`} style={styles.iconContainer}>
@@ -103,9 +137,10 @@ const DesktopShortcut: React.FC<DesktopShortcutProps> = ({
                         {},
                         styles.iconOverlay,
                         isSelected && styles.checkerboard,
-                        isSelected && {
-                            WebkitMask: `url(${requiredIcon})`,
-                        }
+                        isSelected &&
+                            requiredIcon && {
+                                WebkitMask: `url(${requiredIcon})`,
+                            }
                     )}
                 />
                 <Icon icon={icon} style={styles.icon} />

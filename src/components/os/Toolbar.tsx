@@ -47,16 +47,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
     const [time, setTime] = useState(getTime());
 
-    const updateTime = () => {
-        setTime(getTime());
-        setTimeout(() => {
-            updateTime();
-        }, 5000);
-    };
-
     useEffect(() => {
-        updateTime();
-    });
+        setTime(getTime());
+        const intervalId = window.setInterval(() => {
+            setTime(getTime());
+        }, 5000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, []);
 
     const onCheckClick = () => {
         if (lastClickInside.current) {
