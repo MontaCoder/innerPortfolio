@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Colors from '../../constants/colors';
 import { Icon } from '../general';
+import type { AppDefinition } from './appManifest';
 // import { } from '../general';
 // import Home from '../site/Home';
 // import Window from './Window';
@@ -9,12 +10,16 @@ export interface ToolbarProps {
     windows: DesktopWindows;
     toggleMinimize: (key: string) => void;
     shutdown: () => void;
+    onLaunchApplication: (key: string) => void;
+    featuredApps: AppDefinition[];
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
     windows,
     toggleMinimize,
     shutdown,
+    onLaunchApplication,
+    featuredApps,
 }) => {
     const getTime = () => {
         const date = new Date();
@@ -87,6 +92,22 @@ const Toolbar: React.FC<ToolbarProps> = ({
         }
     };
 
+    const handleLaunch = (key: string) => {
+        setStartWindowOpen(false);
+        lastClickInside.current = false;
+        onLaunchApplication(key);
+    };
+
+    const handleLaunchKeyDown = (
+        event: React.KeyboardEvent<HTMLDivElement>,
+        key: string
+    ) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleLaunch(key);
+        }
+    };
+
     return (
         <div style={styles.toolbarOuter}>
             {startWindowOpen && (
@@ -99,6 +120,61 @@ const Toolbar: React.FC<ToolbarProps> = ({
                             <p style={styles.verticalText}>MontaOS</p>
                         </div>
                         <div style={styles.startWindowContent}>
+                            <div style={styles.startSection}>
+                                <p style={styles.startMenuLabel}>Launch</p>
+                                <div
+                                    className="start-menu-option"
+                                    style={styles.launcherOption}
+                                    onMouseDown={() => handleLaunch('appLibrary')}
+                                    onKeyDown={(event) =>
+                                        handleLaunchKeyDown(event, 'appLibrary')
+                                    }
+                                    role="button"
+                                    tabIndex={0}
+                                >
+                                    <Icon
+                                        style={styles.startMenuIcon}
+                                        icon="windowExplorerIcon"
+                                    />
+                                    <div style={styles.launcherTextBlock}>
+                                        <p style={styles.startMenuText}>
+                                            App Library
+                                        </p>
+                                        <p style={styles.launcherDescription}>
+                                            Search and launch every app
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={styles.menuDivider} />
+
+                                {featuredApps.map((app) => (
+                                    <div
+                                        key={app.key}
+                                        className="start-menu-option"
+                                        style={styles.launcherOption}
+                                        onMouseDown={() => handleLaunch(app.key)}
+                                        onKeyDown={(event) =>
+                                            handleLaunchKeyDown(event, app.key)
+                                        }
+                                        role="button"
+                                        tabIndex={0}
+                                    >
+                                        <Icon
+                                            style={styles.startMenuIcon}
+                                            icon={app.shortcutIcon}
+                                        />
+                                        <div style={styles.launcherTextBlock}>
+                                            <p style={styles.startMenuText}>
+                                                {app.name}
+                                            </p>
+                                            <p style={styles.launcherDescription}>
+                                                {app.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                             <div style={styles.startMenuSpace} />
                             <div style={styles.startMenuLine} />
                             <div
@@ -225,7 +301,8 @@ const styles: StyleSheetCSS = {
     startWindowContent: {
         flex: 1,
         flexDirection: 'column',
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
+        overflowY: 'auto',
         // alignItems: 'flex-end',
     },
     startWindow: {
@@ -233,7 +310,7 @@ const styles: StyleSheetCSS = {
         bottom: 28,
         display: 'flex',
         flex: 1,
-        width: 256,
+        width: 332,
         // height: 400,
         left: 4,
         boxSizing: 'border-box',
@@ -267,6 +344,25 @@ const styles: StyleSheetCSS = {
         // flex: 1,
         height: 24,
         padding: 12,
+    },
+    launcherOption: {
+        alignItems: 'center',
+        gap: 8,
+        height: 'auto',
+        minHeight: 40,
+        paddingTop: 8,
+        paddingBottom: 8,
+        cursor: 'pointer',
+    },
+    launcherTextBlock: {
+        flexDirection: 'column',
+        flex: 1,
+        minWidth: 0,
+    },
+    launcherDescription: {
+        fontFamily: 'MSSerif',
+        fontSize: 11,
+        color: Colors.darkGray,
     },
     startMenuSpace: {
         flex: 1,
@@ -329,6 +425,28 @@ const styles: StyleSheetCSS = {
         border: `1px solid ${Colors.white}`,
         borderBottomColor: Colors.black,
         borderRightColor: Colors.black,
+    },
+    startSection: {
+        flexDirection: 'column',
+        paddingTop: 6,
+        paddingBottom: 6,
+    },
+    startMenuLabel: {
+        paddingLeft: 12,
+        paddingRight: 12,
+        paddingBottom: 4,
+        fontFamily: 'MSSerif',
+        fontSize: 11,
+        color: Colors.darkGray,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    menuDivider: {
+        height: 1,
+        marginTop: 4,
+        marginBottom: 4,
+        background: Colors.white,
+        borderTop: `1px solid ${Colors.darkGray}`,
     },
     toolbarTabsContainer: {
         // background: 'blue',

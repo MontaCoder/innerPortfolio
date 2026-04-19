@@ -1,103 +1,16 @@
-import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Colors from '../../constants/colors';
 import ShutdownSequence from './ShutdownSequence';
 import Toolbar from './Toolbar';
 import DesktopShortcut, { DesktopShortcutProps } from './DesktopShortcut';
-import { IconName } from '../../assets/icons';
-
-const ShowcaseExplorer = lazy(() => import('../applications/ShowcaseExplorer'));
-const Doom = lazy(() => import('../applications/Doom'));
-const Scrabble = lazy(() => import('../applications/Scrabble'));
-const Credits = lazy(() => import('../applications/Credits'));
-const KingsBeach = lazy(() => import('../applications/KingsBeach'));
-const Monopoly = lazy(() => import('../applications/Monopoly'));
-const Fifa = lazy(() => import('../applications/Fifa'));
-const Lamborghini = lazy(() => import('../applications/Lamborghini'));
+import {
+    getAppByKey,
+    getBootApps,
+    getDesktopApps,
+    getFeaturedApps,
+} from './appManifest';
 
 export interface DesktopProps {}
-
-type ExtendedWindowAppProps<T> = T & WindowAppProps;
-type DesktopApplicationComponent =
-    | React.ComponentType<ExtendedWindowAppProps<any>>
-    | React.LazyExoticComponent<
-          React.ComponentType<ExtendedWindowAppProps<any>>
-      >;
-
-const APPLICATIONS: {
-    [key in string]: {
-        key: string;
-        name: string;
-        shortcutIcon: IconName;
-        component: DesktopApplicationComponent;
-    };
-} = {
-    // computer: {
-    //     key: 'computer',
-    //     name: 'This Computer',
-    //     shortcutIcon: 'computerBig',
-    //     component: ThisComputer,
-    // },
-    showcase: {
-        key: 'showcase',
-        name: 'My Showcase',
-        shortcutIcon: 'showcaseIcon',
-        component: ShowcaseExplorer,
-    },
-    // trail: {
-    //     key: 'trail',
-    //     name: 'The Oregon Trail',
-    //     shortcutIcon: 'trailIcon',
-    //     component: OregonTrail,
-    // },
-    doom: {
-        key: 'doom',
-        name: 'Doom',
-        shortcutIcon: 'doomIcon',
-        component: Doom,
-    },
-    scrabble: {
-        key: 'scrabble',
-        name: 'Scrabble',
-        shortcutIcon: 'scrabbleIcon',
-        component: Scrabble,
-    },
-    // henordle: {
-    //     key: 'henordle',
-    //     name: 'Henordle',
-    //     shortcutIcon: 'henordleIcon',
-    //     component: Henordle,
-    // },
-    credits: {
-        key: 'credits',
-        name: 'Credits',
-        shortcutIcon: 'credits',
-        component: Credits,
-    },
-    kingsBeach: {
-        key: 'kingsBeach',
-        name: 'kingsBeach',
-        shortcutIcon: 'kingsBeach',
-        component: KingsBeach,
-    },
-    monopoly: {
-        key: 'monopoly',
-        name: 'Monopoly',
-        shortcutIcon: 'monopoly',
-        component: Monopoly,
-    },
-    fifa: {
-        key: 'fifa',
-        name: 'Fifa',
-        shortcutIcon: 'fifa',
-        component: Fifa,
-    },
-    lamborghini: {
-        key: 'lamborghini',
-        name: 'Lamborghini',
-        shortcutIcon: 'lamborghini',
-        component: Lamborghini,
-    }
-};
 
 const Desktop: React.FC<DesktopProps> = (props) => {
     const [windows, setWindows] = useState<DesktopWindows>({});
@@ -106,39 +19,29 @@ const Desktop: React.FC<DesktopProps> = (props) => {
 
     const [shutdown, setShutdown] = useState(false);
     const [numShutdowns, setNumShutdowns] = useState(1);
+    const launchApplication = useRef<(key: string) => void>(() => undefined);
 
     useEffect(() => {
         if (shutdown === true) {
             rebootDesktop();
+            return;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        getBootApps().forEach((app) => {
+            launchApplication.current(app.key);
+        });
     }, [shutdown]);
 
     useEffect(() => {
         const newShortcuts: DesktopShortcutProps[] = [];
-        Object.keys(APPLICATIONS).forEach((key) => {
-            const app = APPLICATIONS[key];
+        getDesktopApps().forEach((app) => {
             newShortcuts.push({
                 shortcutName: app.name,
                 icon: app.shortcutIcon,
                 onOpen: () => {
-                    addWindow(
-                        app.key,
-                        <app.component
-                            onInteract={() => onWindowInteract(app.key)}
-                            onMinimize={() => minimizeWindow(app.key)}
-                            onClose={() => removeWindow(app.key)}
-                            key={app.key}
-                        />
-                    );
+                    launchApplication.current(app.key);
                 },
             });
-        });
-
-        newShortcuts.forEach((shortcut) => {
-            if (shortcut.shortcutName === 'My Showcase') {
-                shortcut.onOpen();
-            }
         });
 
         setShortcuts(newShortcuts);
@@ -149,88 +52,145 @@ const Desktop: React.FC<DesktopProps> = (props) => {
         setWindows({});
     }, []);
 
-    const removeWindow = useCallback((key: string) => {
-        // Absolute hack and a half
-        setTimeout(() => {
-            setWindows((prevWindows) => {
-                const newWindows = { ...prevWindows };
-                delete newWindows[key];
-                return newWindows;
-            });
-        }, 100);
+    const getHighestZIndexFrom = useCallback((windowMap: DesktopWindows) => {
+        let highestZIndex = 0;
+
+        Object.keys(windowMap).forEach((key) => {
+            const window = windowMap[key];
+            if (window && window.zIndex > highestZIndex) {
+                highestZIndex = window.zIndex;
+            }
+        });
+
+        return highestZIndex;
     }, []);
 
-    const minimizeWindow = useCallback((key: string) => {
+    const removeWindow = useCallback((key: string) => {
         setWindows((prevWindows) => {
             const newWindows = { ...prevWindows };
-            newWindows[key].minimized = true;
+            delete newWindows[key];
             return newWindows;
         });
     }, []);
 
-    const getHighestZIndex = useCallback((): number => {
-        let highestZIndex = 0;
-        Object.keys(windows).forEach((key) => {
-            const window = windows[key];
-            if (window) {
-                if (window.zIndex > highestZIndex)
-                    highestZIndex = window.zIndex;
+    const minimizeWindow = useCallback((key: string) => {
+        setWindows((prevWindows) => {
+            const currentWindow = prevWindows[key];
+            if (!currentWindow) {
+                return prevWindows;
             }
+
+            return {
+                ...prevWindows,
+                [key]: {
+                    ...currentWindow,
+                    minimized: true,
+                },
+            };
         });
-        return highestZIndex;
-    }, [windows]);
+    }, []);
 
     const toggleMinimize = useCallback(
         (key: string) => {
-            const newWindows = { ...windows };
-            const highestIndex = getHighestZIndex();
-            if (
-                newWindows[key].minimized ||
-                newWindows[key].zIndex === highestIndex
-            ) {
-                newWindows[key].minimized = !newWindows[key].minimized;
-            }
-            newWindows[key].zIndex = getHighestZIndex() + 1;
-            setWindows(newWindows);
+            setWindows((prevWindows) => {
+                const currentWindow = prevWindows[key];
+                if (!currentWindow) {
+                    return prevWindows;
+                }
+
+                const highestIndex = getHighestZIndexFrom(prevWindows);
+                const shouldToggle =
+                    currentWindow.minimized ||
+                    currentWindow.zIndex === highestIndex;
+
+                return {
+                    ...prevWindows,
+                    [key]: {
+                        ...currentWindow,
+                        minimized: shouldToggle
+                            ? !currentWindow.minimized
+                            : currentWindow.minimized,
+                        zIndex: highestIndex + 1,
+                    },
+                };
+            });
         },
-        [windows, getHighestZIndex]
+        [getHighestZIndexFrom]
     );
 
     const onWindowInteract = useCallback(
         (key: string) => {
-            setWindows((prevWindows) => ({
-                ...prevWindows,
-                [key]: {
-                    ...prevWindows[key],
-                    zIndex: 1 + getHighestZIndex(),
-                },
-            }));
+            setWindows((prevWindows) => {
+                const currentWindow = prevWindows[key];
+                if (!currentWindow) {
+                    return prevWindows;
+                }
+
+                return {
+                    ...prevWindows,
+                    [key]: {
+                        ...currentWindow,
+                        zIndex: 1 + getHighestZIndexFrom(prevWindows),
+                    },
+                };
+            });
         },
-        [setWindows, getHighestZIndex]
+        [getHighestZIndexFrom]
     );
+
+    const openApplication = useCallback(
+        (key: string) => {
+            const app = getAppByKey(key);
+            if (!app) {
+                return;
+            }
+
+            setWindows((prevWindows) => {
+                const highestIndex = getHighestZIndexFrom(prevWindows);
+                const currentWindow = prevWindows[key];
+
+                if (currentWindow) {
+                    return {
+                        ...prevWindows,
+                        [key]: {
+                            ...currentWindow,
+                            minimized: false,
+                            zIndex: highestIndex + 1,
+                        },
+                    };
+                }
+
+                return {
+                    ...prevWindows,
+                    [key]: {
+                        zIndex: highestIndex + 1,
+                        minimized: false,
+                        component: (
+                            <app.component
+                                onInteract={() => onWindowInteract(key)}
+                                onMinimize={() => minimizeWindow(key)}
+                                onClose={() => removeWindow(key)}
+                                onLaunchApplication={openApplication}
+                                key={key}
+                            />
+                        ),
+                        name: app.name,
+                        icon: app.shortcutIcon,
+                    },
+                };
+            });
+        },
+        [getHighestZIndexFrom, minimizeWindow, onWindowInteract, removeWindow]
+    );
+
+    launchApplication.current = openApplication;
 
     const startShutdown = useCallback(() => {
         setTimeout(() => {
             setShutdown(true);
-            setNumShutdowns(numShutdowns + 1);
+            setNumShutdowns((count) => count + 1);
         }, 600);
-    }, [numShutdowns]);
-
-    const addWindow = useCallback(
-        (key: string, element: React.ReactElement<any>) => {
-            setWindows((prevState) => ({
-                ...prevState,
-                [key]: {
-                    zIndex: getHighestZIndex() + 1,
-                    minimized: false,
-                    component: element,
-                    name: APPLICATIONS[key].name,
-                    icon: APPLICATIONS[key].shortcutIcon,
-                },
-            }));
-        },
-        [getHighestZIndex]
-    );
+    }, []);
 
     return !shutdown ? (
         <div style={styles.desktop}>
@@ -279,6 +239,8 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                 windows={windows}
                 toggleMinimize={toggleMinimize}
                 shutdown={startShutdown}
+                onLaunchApplication={openApplication}
+                featuredApps={getFeaturedApps()}
             />
         </div>
     ) : (
