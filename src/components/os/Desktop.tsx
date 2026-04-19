@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Colors from '../../constants/colors';
 import ShutdownSequence from './ShutdownSequence';
 import Toolbar from './Toolbar';
@@ -15,38 +15,8 @@ export interface DesktopProps {}
 const Desktop: React.FC<DesktopProps> = (props) => {
     const [windows, setWindows] = useState<DesktopWindows>({});
 
-    const [shortcuts, setShortcuts] = useState<DesktopShortcutProps[]>([]);
-
     const [shutdown, setShutdown] = useState(false);
     const [numShutdowns, setNumShutdowns] = useState(1);
-    const launchApplication = useRef<(key: string) => void>(() => undefined);
-
-    useEffect(() => {
-        if (shutdown === true) {
-            rebootDesktop();
-            return;
-        }
-
-        getBootApps().forEach((app) => {
-            launchApplication.current(app.key);
-        });
-    }, [shutdown]);
-
-    useEffect(() => {
-        const newShortcuts: DesktopShortcutProps[] = [];
-        getDesktopApps().forEach((app) => {
-            newShortcuts.push({
-                shortcutName: app.name,
-                icon: app.shortcutIcon,
-                onOpen: () => {
-                    launchApplication.current(app.key);
-                },
-            });
-        });
-
-        setShortcuts(newShortcuts);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const rebootDesktop = useCallback(() => {
         setWindows({});
@@ -183,7 +153,29 @@ const Desktop: React.FC<DesktopProps> = (props) => {
         [getHighestZIndexFrom, minimizeWindow, onWindowInteract, removeWindow]
     );
 
-    launchApplication.current = openApplication;
+    const desktopApps = useMemo(() => getDesktopApps(), []);
+    const featuredApps = useMemo(() => getFeaturedApps(), []);
+
+    const shortcuts = useMemo(
+        () =>
+            desktopApps.map((app) => ({
+                shortcutName: app.name,
+                icon: app.shortcutIcon,
+                onOpen: () => openApplication(app.key),
+            })),
+        [desktopApps, openApplication]
+    );
+
+    useEffect(() => {
+        if (shutdown === true) {
+            rebootDesktop();
+            return;
+        }
+
+        getBootApps().forEach((app) => {
+            openApplication(app.key);
+        });
+    }, [openApplication, rebootDesktop, shutdown]);
 
     const startShutdown = useCallback(() => {
         setTimeout(() => {
@@ -240,7 +232,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                 toggleMinimize={toggleMinimize}
                 shutdown={startShutdown}
                 onLaunchApplication={openApplication}
-                featuredApps={getFeaturedApps()}
+                featuredApps={featuredApps}
             />
         </div>
     ) : (

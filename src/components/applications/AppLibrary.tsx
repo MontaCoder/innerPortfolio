@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Icon } from '../general';
 import Window from '../os/Window';
 import useInitialWindowSize from '../../hooks/useInitialWindowSize';
@@ -56,10 +56,16 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
     const { initWidth, initHeight } = useInitialWindowSize({ margin: 80 });
     const [query, setQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
-    const [recentAppKeys, setRecentAppKeys] = useState<string[]>([]);
+    const [recentAppKeys, setRecentAppKeys] = useState<string[]>(() =>
+        readRecentAppKeys()
+    );
 
     const allApps = useMemo(() => getAllApps(), []);
     const launchableApps = useMemo(() => getLauncherApps(), []);
+    const launchableAppsByKey = useMemo(
+        () => new Map(launchableApps.map((app) => [app.key, app] as const)),
+        [launchableApps]
+    );
     const featuredApps = useMemo(
         () => launchableApps.filter((app) => app.featured),
         [launchableApps]
@@ -67,9 +73,9 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
     const recentApps = useMemo(
         () =>
             recentAppKeys
-                .map((key) => launchableApps.find((app) => app.key === key))
+                .map((key) => launchableAppsByKey.get(key))
                 .filter((app): app is AppDefinition => Boolean(app)),
-        [launchableApps, recentAppKeys]
+        [launchableAppsByKey, recentAppKeys]
     );
     const desktopVisibleCount = useMemo(
         () => allApps.filter((app) => app.showOnDesktop !== false).length,
@@ -107,12 +113,12 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
         });
     }, [activeCategory, launchableApps, query]);
 
-    useEffect(() => {
-        setRecentAppKeys(readRecentAppKeys());
-    }, []);
-
-    const handleLaunch = (key: string) => {
+    const handleLaunch = useCallback((key: string) => {
         props.onLaunchApplication?.(key);
+
+        if (!launchableAppsByKey.has(key)) {
+            return;
+        }
 
         setRecentAppKeys((previousKeys) => {
             const nextKeys = [key, ...previousKeys.filter((item) => item !== key)]
@@ -122,7 +128,7 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
 
             return nextKeys;
         });
-    };
+    }, [launchableAppsByKey, props.onLaunchApplication]);
 
     return (
         <Window
@@ -348,7 +354,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, onLaunch }) => {
 
             <div style={styles.cardFooter}>
                 <p style={styles.launchHint}>Open app</p>
-                <p style={styles.launchArrow}>?</p>
+                <p style={styles.launchArrow}>&gt;</p>
             </div>
         </div>
     );
