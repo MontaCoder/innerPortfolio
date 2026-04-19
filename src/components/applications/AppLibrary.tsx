@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../general';
 import Window from '../os/Window';
 import useInitialWindowSize from '../../hooks/useInitialWindowSize';
@@ -13,17 +13,63 @@ import type { AppCategory, AppDefinition } from '../os/appManifest';
 export interface AppLibraryProps extends WindowAppProps {}
 
 type CategoryFilter = AppCategory | 'all';
+const RECENT_APPS_STORAGE_KEY = 'inner-portfolio.recent-apps';
+
+const readRecentAppKeys = (): string[] => {
+    if (typeof window === 'undefined') {
+        return [];
+    }
+
+    try {
+        const rawValue = window.localStorage.getItem(RECENT_APPS_STORAGE_KEY);
+        if (!rawValue) {
+            return [];
+        }
+
+        const parsed = JSON.parse(rawValue) as unknown;
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return parsed.filter((item): item is string => typeof item === 'string');
+    } catch {
+        return [];
+    }
+};
+
+const saveRecentAppKeys = (keys: string[]) => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem(
+            RECENT_APPS_STORAGE_KEY,
+            JSON.stringify(keys)
+        );
+    } catch {
+        // Ignore storage failures in private browsing or locked-down contexts.
+    }
+};
 
 const AppLibrary: React.FC<AppLibraryProps> = (props) => {
     const { initWidth, initHeight } = useInitialWindowSize({ margin: 80 });
     const [query, setQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+    const [recentAppKeys, setRecentAppKeys] = useState<string[]>([]);
 
     const allApps = useMemo(() => getAllApps(), []);
     const launchableApps = useMemo(() => getLauncherApps(), []);
     const featuredApps = useMemo(
         () => launchableApps.filter((app) => app.featured),
         [launchableApps]
+    );
+    const recentApps = useMemo(
+        () =>
+            recentAppKeys
+                .map((key) => launchableApps.find((app) => app.key === key))
+                .filter((app): app is AppDefinition => Boolean(app)),
+        [launchableApps, recentAppKeys]
     );
     const desktopVisibleCount = useMemo(
         () => allApps.filter((app) => app.showOnDesktop !== false).length,
@@ -61,8 +107,21 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
         });
     }, [activeCategory, launchableApps, query]);
 
+    useEffect(() => {
+        setRecentAppKeys(readRecentAppKeys());
+    }, []);
+
     const handleLaunch = (key: string) => {
         props.onLaunchApplication?.(key);
+
+        setRecentAppKeys((previousKeys) => {
+            const nextKeys = [key, ...previousKeys.filter((item) => item !== key)]
+                .slice(0, 6);
+
+            saveRecentAppKeys(nextKeys);
+
+            return nextKeys;
+        });
     };
 
     return (
@@ -143,6 +202,46 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
                             </div>
                         </button>
                     ))}
+                </div>
+
+                <div style={styles.recentHeader}>
+                    <p className="showcase-header">RECENT</p>
+                    <p style={styles.quickLaunchDescription}>
+                        Jump back into the apps you already opened during this
+                        visit.
+                    </p>
+                </div>
+
+                <div style={styles.recentRow}>
+                    {recentApps.length > 0 ? (
+                        recentApps.map((app) => (
+                            <button
+                                key={app.key}
+                                type="button"
+                                onClick={() => handleLaunch(app.key)}
+                                style={styles.recentCard}
+                            >
+                                <Icon
+                                    icon={app.shortcutIcon}
+                                    style={styles.recentIcon}
+                                />
+                                <div style={styles.recentText}>
+                                    <p style={styles.recentTitle}>{app.name}</p>
+                                    <p style={styles.quickLaunchMeta}>
+                                        {APP_CATEGORY_LABELS[app.category]}
+                                    </p>
+                                </div>
+                            </button>
+                        ))
+                    ) : (
+                        <div className="big-button-container" style={styles.emptyRecentState}>
+                            <h3>No recent apps yet</h3>
+                            <p>
+                                Open a few windows and this section will track your
+                                session so you can jump back faster.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div style={styles.filters}>
@@ -332,6 +431,48 @@ const styles: StyleSheetCSS = {
         flexWrap: 'wrap',
         gap: 12,
     },
+    recentHeader: {
+        width: '100%',
+        gap: 8,
+        alignItems: 'baseline',
+        flexWrap: 'wrap',
+    },
+    recentRow: {
+        width: '100%',
+        flexWrap: 'wrap',
+        gap: 12,
+    },
+    recentCard: {
+        flex: '1 1 200px',
+        minWidth: 200,
+        padding: 12,
+        boxSizing: 'border-box',
+        cursor: 'pointer',
+        border: '1px solid #000',
+        borderTopColor: '#fff',
+        borderLeftColor: '#fff',
+        borderRightColor: '#808080',
+        borderBottomColor: '#808080',
+        backgroundColor: '#efefef',
+        alignItems: 'center',
+        gap: 10,
+        textAlign: 'left',
+    },
+    recentIcon: {
+        width: 24,
+        height: 24,
+        flexShrink: 0,
+    },
+    recentText: {
+        flexDirection: 'column',
+        minWidth: 0,
+        flex: 1,
+    },
+    recentTitle: {
+        fontFamily: 'MSSerif',
+        fontSize: 14,
+        marginBottom: 2,
+    },
     quickLaunchCard: {
         flex: '1 1 240px',
         minWidth: 240,
@@ -430,6 +571,13 @@ const styles: StyleSheetCSS = {
     emptyState: {
         width: '100%',
         padding: 20,
+        boxSizing: 'border-box',
+        flexDirection: 'column',
+        gap: 8,
+    },
+    emptyRecentState: {
+        width: '100%',
+        padding: 16,
         boxSizing: 'border-box',
         flexDirection: 'column',
         gap: 8,
