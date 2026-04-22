@@ -1,8 +1,15 @@
 import React, { lazy } from 'react';
 import type { IconName } from '../../assets/icons';
+import type { AppUnlockState } from '../../session/montaSession';
 
 const AppLibrary = lazy(() => import('../applications/AppLibrary'));
 const ShowcaseExplorer = lazy(() => import('../applications/ShowcaseExplorer'));
+const ProjectArcade = lazy(() => import('../applications/ProjectArcade'));
+const MusicStudio = lazy(() => import('../applications/MusicStudio'));
+const PixelGallery = lazy(() => import('../applications/PixelGallery'));
+const GameCenter = lazy(() => import('../applications/GameCenter'));
+const Guestbook = lazy(() => import('../applications/Guestbook'));
+const HelpCenter = lazy(() => import('../applications/HelpCenter'));
 const Doom = lazy(() => import('../applications/Doom'));
 const Scrabble = lazy(() => import('../applications/Scrabble'));
 const Credits = lazy(() => import('../applications/Credits'));
@@ -16,6 +23,7 @@ const ThisComputer = lazy(() => import('../applications/ThisComputer'));
 
 export type AppCategory =
     | 'portfolio'
+    | 'creative'
     | 'games'
     | 'utility'
     | 'experimental';
@@ -34,10 +42,13 @@ export interface AppDefinition {
     showInLauncher?: boolean;
     launchOrder?: number;
     launchOnBoot?: boolean;
+    tags?: string[];
+    unlockState?: AppUnlockState;
 }
 
 export const APP_CATEGORY_ORDER: AppCategory[] = [
     'portfolio',
+    'creative',
     'games',
     'utility',
     'experimental',
@@ -45,6 +56,7 @@ export const APP_CATEGORY_ORDER: AppCategory[] = [
 
 export const APP_CATEGORY_LABELS: Record<AppCategory, string> = {
     portfolio: 'Portfolio',
+    creative: 'Creative',
     games: 'Games',
     utility: 'Utility',
     experimental: 'Experimental',
@@ -61,6 +73,7 @@ const APP_MANIFEST: AppDefinition[] = [
         showOnDesktop: true,
         showInLauncher: true,
         launchOrder: 0,
+        tags: ['launcher', 'search', 'desktop'],
     },
     {
         key: 'showcase',
@@ -75,6 +88,46 @@ const APP_MANIFEST: AppDefinition[] = [
         showInLauncher: true,
         launchOrder: 10,
         launchOnBoot: true,
+        tags: ['about', 'projects', 'contact'],
+    },
+    {
+        key: 'projectArcade',
+        name: 'Project Arcade',
+        shortcutIcon: 'showcaseIcon',
+        component: ProjectArcade,
+        category: 'portfolio',
+        description: 'Curated interactive case studies and repo feed.',
+        featured: true,
+        showOnDesktop: true,
+        showInLauncher: true,
+        launchOrder: 12,
+        tags: ['software', 'case studies', 'repos'],
+    },
+    {
+        key: 'guestbook',
+        name: 'Guestbook.exe',
+        shortcutIcon: 'windowExplorerIcon',
+        component: Guestbook,
+        category: 'portfolio',
+        description: 'Retro contact desk with a printable visitor card.',
+        featured: true,
+        showOnDesktop: true,
+        showInLauncher: true,
+        launchOrder: 14,
+        tags: ['contact', 'email', 'share'],
+    },
+    {
+        key: 'gameCenter',
+        name: 'Game Center',
+        shortcutIcon: 'windowGameIcon',
+        component: GameCenter,
+        category: 'games',
+        description: 'Launch DOS games and unlock hidden experiments.',
+        featured: true,
+        showOnDesktop: true,
+        showInLauncher: true,
+        launchOrder: 18,
+        tags: ['games', 'dos', 'unlock'],
     },
     {
         key: 'doom',
@@ -87,6 +140,7 @@ const APP_MANIFEST: AppDefinition[] = [
         showOnDesktop: true,
         showInLauncher: true,
         launchOrder: 20,
+        tags: ['dos', 'shooter'],
     },
     {
         key: 'scrabble',
@@ -95,10 +149,11 @@ const APP_MANIFEST: AppDefinition[] = [
         component: Scrabble,
         category: 'games',
         description: 'Word game with a retro desktop wrapper.',
-        featured: true,
-        showOnDesktop: true,
+        featured: false,
+        showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 30,
+        tags: ['dos', 'word'],
     },
     {
         key: 'credits',
@@ -107,9 +162,10 @@ const APP_MANIFEST: AppDefinition[] = [
         component: Credits,
         category: 'utility',
         description: 'Acknowledgements and project notes.',
-        showOnDesktop: true,
+        showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 40,
+        tags: ['about', 'credits'],
     },
     {
         key: 'kingsBeach',
@@ -118,9 +174,10 @@ const APP_MANIFEST: AppDefinition[] = [
         component: KingsBeach,
         category: 'games',
         description: 'A nostalgic game window with a postcard feel.',
-        showOnDesktop: true,
+        showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 50,
+        tags: ['dos', 'nostalgia'],
     },
     {
         key: 'monopoly',
@@ -129,9 +186,10 @@ const APP_MANIFEST: AppDefinition[] = [
         component: Monopoly,
         category: 'games',
         description: 'Board-game era fun inside the desktop.',
-        showOnDesktop: true,
+        showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 60,
+        tags: ['dos', 'board game'],
     },
     {
         key: 'fifa',
@@ -140,9 +198,10 @@ const APP_MANIFEST: AppDefinition[] = [
         component: Fifa,
         category: 'games',
         description: 'Retro sports window for the launcher lineup.',
-        showOnDesktop: true,
+        showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 70,
+        tags: ['dos', 'sports'],
     },
     {
         key: 'lamborghini',
@@ -151,9 +210,36 @@ const APP_MANIFEST: AppDefinition[] = [
         component: Lamborghini,
         category: 'games',
         description: 'DOS racing window running the correct bundle.',
-        showOnDesktop: true,
+        showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 80,
+        tags: ['dos', 'racing'],
+    },
+    {
+        key: 'musicStudio',
+        name: 'Music Studio',
+        shortcutIcon: 'cd',
+        component: MusicStudio,
+        category: 'creative',
+        description: 'Compact playlist, notes, and production snapshots.',
+        featured: false,
+        showOnDesktop: true,
+        showInLauncher: true,
+        launchOrder: 82,
+        tags: ['music', 'audio', 'creative'],
+    },
+    {
+        key: 'pixelGallery',
+        name: 'Pixel Gallery',
+        shortcutIcon: 'showcaseIcon',
+        component: PixelGallery,
+        category: 'creative',
+        description: 'Pixel-art viewer with animation and process links.',
+        featured: false,
+        showOnDesktop: true,
+        showInLauncher: true,
+        launchOrder: 84,
+        tags: ['art', 'animation', 'creative'],
     },
     {
         key: 'trail',
@@ -165,6 +251,8 @@ const APP_MANIFEST: AppDefinition[] = [
         showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 90,
+        tags: ['dos', 'hidden'],
+        unlockState: 'locked',
     },
     {
         key: 'henordle',
@@ -176,6 +264,8 @@ const APP_MANIFEST: AppDefinition[] = [
         showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 100,
+        tags: ['wordle', 'hidden'],
+        unlockState: 'locked',
     },
     {
         key: 'thisComputer',
@@ -187,6 +277,19 @@ const APP_MANIFEST: AppDefinition[] = [
         showOnDesktop: false,
         showInLauncher: true,
         launchOrder: 110,
+        tags: ['web', 'retro'],
+    },
+    {
+        key: 'helpCenter',
+        name: 'MontaOS Help',
+        shortcutIcon: 'computerSmall',
+        component: HelpCenter,
+        category: 'utility',
+        description: 'Tour checklist, tips, achievements, and reset tools.',
+        showOnDesktop: false,
+        showInLauncher: true,
+        launchOrder: 120,
+        tags: ['help', 'tour', 'achievements'],
     },
 ];
 

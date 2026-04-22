@@ -9,56 +9,17 @@ import {
     getLauncherApps,
 } from '../os/appManifest';
 import type { AppCategory, AppDefinition } from '../os/appManifest';
+import { hasUnlockedApp, useMontaSession } from '../../session/montaSession';
 
 export interface AppLibraryProps extends WindowAppProps {}
 
 type CategoryFilter = AppCategory | 'all';
-const RECENT_APPS_STORAGE_KEY = 'inner-portfolio.recent-apps';
-
-const readRecentAppKeys = (): string[] => {
-    if (typeof window === 'undefined') {
-        return [];
-    }
-
-    try {
-        const rawValue = window.localStorage.getItem(RECENT_APPS_STORAGE_KEY);
-        if (!rawValue) {
-            return [];
-        }
-
-        const parsed = JSON.parse(rawValue) as unknown;
-        if (!Array.isArray(parsed)) {
-            return [];
-        }
-
-        return parsed.filter((item): item is string => typeof item === 'string');
-    } catch {
-        return [];
-    }
-};
-
-const saveRecentAppKeys = (keys: string[]) => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        window.localStorage.setItem(
-            RECENT_APPS_STORAGE_KEY,
-            JSON.stringify(keys)
-        );
-    } catch {
-        // Ignore storage failures in private browsing or locked-down contexts.
-    }
-};
 
 const AppLibrary: React.FC<AppLibraryProps> = (props) => {
     const { initWidth, initHeight } = useInitialWindowSize({ margin: 80 });
+    const session = useMontaSession();
     const [query, setQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
-    const [recentAppKeys, setRecentAppKeys] = useState<string[]>(() =>
-        readRecentAppKeys()
-    );
 
     const allApps = useMemo(() => getAllApps(), []);
     const launchableApps = useMemo(() => getLauncherApps(), []);
@@ -72,10 +33,10 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
     );
     const recentApps = useMemo(
         () =>
-            recentAppKeys
+            session.recentAppKeys
                 .map((key) => launchableAppsByKey.get(key))
                 .filter((app): app is AppDefinition => Boolean(app)),
-        [launchableAppsByKey, recentAppKeys]
+        [launchableAppsByKey, session.recentAppKeys]
     );
     const desktopVisibleCount = useMemo(
         () => allApps.filter((app) => app.showOnDesktop !== false).length,
@@ -84,6 +45,15 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
     const hiddenCount = useMemo(
         () => allApps.filter((app) => app.showOnDesktop === false).length,
         [allApps]
+    );
+    const lockedCount = useMemo(
+        () =>
+            allApps.filter(
+                (app) =>
+                    app.unlockState === 'locked' &&
+                    !hasUnlockedApp(session, app.key)
+            ).length,
+        [allApps, session]
     );
 
     const categoryOptions = useMemo(() => {
@@ -104,7 +74,7 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
                 activeCategory === 'all' || app.category === activeCategory;
             const textMatches =
                 normalizedQuery.length === 0 ||
-                [app.name, app.description, app.category]
+                [app.name, app.description, app.category, ...(app.tags ?? [])]
                     .join(' ')
                     .toLowerCase()
                     .includes(normalizedQuery);
@@ -115,20 +85,7 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
 
     const handleLaunch = useCallback((key: string) => {
         props.onLaunchApplication?.(key);
-
-        if (!launchableAppsByKey.has(key)) {
-            return;
-        }
-
-        setRecentAppKeys((previousKeys) => {
-            const nextKeys = [key, ...previousKeys.filter((item) => item !== key)]
-                .slice(0, 6);
-
-            saveRecentAppKeys(nextKeys);
-
-            return nextKeys;
-        });
-    }, [launchableAppsByKey, props.onLaunchApplication]);
+    }, [props.onLaunchApplication]);
 
     return (
         <Window
@@ -183,6 +140,10 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
                     <div className="big-button-container" style={styles.summaryCard}>
                         <p style={styles.summaryLabel}>Hidden surfaces</p>
                         <h2 style={styles.summaryValue}>{hiddenCount}</h2>
+                    </div>
+                    <div className="big-button-container" style={styles.summaryCard}>
+                        <p style={styles.summaryLabel}>Locked apps</p>
+                        <h2 style={styles.summaryValue}>{lockedCount}</h2>
                     </div>
                 </div>
 
@@ -280,7 +241,15 @@ const AppLibrary: React.FC<AppLibraryProps> = (props) => {
                 <div style={styles.grid}>
                     {filteredApps.length > 0 ? (
                         filteredApps.map((app) => (
-                            <AppCard key={app.key} app={app} onLaunch={handleLaunch} />
+                            <AppCard
+                                key={app.key}
+                                app={app}
+                                isLocked={
+                                    app.unlockState === 'locked' &&
+                                    !hasUnlockedApp(session, app.key)
+                                }
+                                onLaunch={handleLaunch}
+                            />
                         ))
                     ) : (
                         <div className="big-button-container" style={styles.emptyState}>
@@ -317,11 +286,16 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, isActive, onClick }) => 
 
 interface AppCardProps {
     app: AppDefinition;
+    isLocked: boolean;
     onLaunch: (key: string) => void;
 }
 
-const AppCard: React.FC<AppCardProps> = ({ app, onLaunch }) => {
+const AppCard: React.FC<AppCardProps> = ({ app, isLocked, onLaunch }) => {
     const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (isLocked) {
+            return;
+        }
+
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             onLaunch(app.key);
@@ -332,9 +306,14 @@ const AppCard: React.FC<AppCardProps> = ({ app, onLaunch }) => {
         <div
             role="button"
             tabIndex={0}
-            onClick={() => onLaunch(app.key)}
+            aria-disabled={isLocked}
+            onClick={() => {
+                if (!isLocked) {
+                    onLaunch(app.key);
+                }
+            }}
             onKeyDown={handleKeyDown}
-            style={styles.card}
+            style={Object.assign({}, styles.card, isLocked && styles.lockedCard)}
         >
             <div style={styles.cardHeader}>
                 <Icon icon={app.shortcutIcon} style={styles.cardIcon} />
@@ -350,10 +329,13 @@ const AppCard: React.FC<AppCardProps> = ({ app, onLaunch }) => {
                 {app.featured && <Badge label="Featured" />}
                 {!app.showOnDesktop && <Badge label="Launcher-only" />}
                 {app.launchOnBoot && <Badge label="Boot app" />}
+                {isLocked && <Badge label="Locked" />}
             </div>
 
             <div style={styles.cardFooter}>
-                <p style={styles.launchHint}>Open app</p>
+                <p style={styles.launchHint}>
+                    {isLocked ? 'Unlock in Game Center' : 'Open app'}
+                </p>
                 <p style={styles.launchArrow}>&gt;</p>
             </div>
         </div>
@@ -604,6 +586,10 @@ const styles: StyleSheetCSS = {
         gap: 12,
         cursor: 'pointer',
         outline: 'none',
+    },
+    lockedCard: {
+        opacity: 0.58,
+        cursor: 'not-allowed',
     },
     cardHeader: {
         alignItems: 'center',

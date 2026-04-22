@@ -1,8 +1,24 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+    Suspense,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 import Colors from '../../constants/colors';
 import ShutdownSequence from './ShutdownSequence';
 import Toolbar from './Toolbar';
 import DesktopShortcut, { DesktopShortcutProps } from './DesktopShortcut';
+import MontaTour from './MontaTour';
+import {
+    addAchievement,
+    completeTourStep,
+    hasUnlockedApp,
+    markAppLaunched,
+    readMontaSession,
+    unlockApp,
+    useMontaSession,
+} from '../../session/montaSession';
 import {
     getAppByKey,
     getBootApps,
@@ -12,11 +28,48 @@ import {
 
 export interface DesktopProps {}
 
+interface DesktopNotification {
+    id: number;
+    title: string;
+    body: string;
+}
+
+const GAME_APP_KEYS = [
+    'doom',
+    'scrabble',
+    'kingsBeach',
+    'monopoly',
+    'fifa',
+    'lamborghini',
+    'trail',
+    'henordle',
+];
+
 const Desktop: React.FC<DesktopProps> = (props) => {
     const [windows, setWindows] = useState<DesktopWindows>({});
+    const session = useMontaSession();
+    const [notifications, setNotifications] = useState<DesktopNotification[]>(
+        []
+    );
 
     const [shutdown, setShutdown] = useState(false);
     const [numShutdowns, setNumShutdowns] = useState(1);
+
+    const pushNotification = useCallback((title: string, body: string) => {
+        const id = Date.now() + Math.random();
+        const notification = { id, title, body };
+
+        setNotifications((currentNotifications) => [
+            notification,
+            ...currentNotifications,
+        ].slice(0, 3));
+
+        window.setTimeout(() => {
+            setNotifications((currentNotifications) =>
+                currentNotifications.filter((item) => item.id !== id)
+            );
+        }, 4200);
+    }, []);
 
     const rebootDesktop = useCallback(() => {
         setWindows({});
@@ -115,6 +168,60 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                 return;
             }
 
+            const currentSession = readMontaSession();
+            const isLocked =
+                app.unlockState === 'locked' &&
+                !hasUnlockedApp(currentSession, key);
+
+            if (isLocked) {
+                pushNotification(
+                    'Locked app',
+                    `${app.name} is hidden in the archive. Try Game Center first.`
+                );
+                return;
+            }
+
+            const isFirstVisit = !currentSession.visitedAppKeys.includes(key);
+            markAppLaunched(key);
+
+            if (key === 'showcase') {
+                completeTourStep('open-showcase');
+            }
+
+            if (key === 'appLibrary') {
+                completeTourStep('discover-library');
+            }
+
+            if (key === 'gameCenter' || GAME_APP_KEYS.includes(key)) {
+                completeTourStep('discover-games');
+            }
+
+            if (key === 'projectArcade') {
+                addAchievement('project-arcade-visited');
+            }
+
+            if (key === 'musicStudio' || key === 'pixelGallery') {
+                addAchievement(`creative:${key}`);
+            }
+
+            if (isFirstVisit) {
+                pushNotification(
+                    'New app discovered',
+                    `${app.name} was added to your MontaOS session.`
+                );
+            }
+
+            if (
+                key === 'gameCenter' &&
+                !hasUnlockedApp(currentSession, 'henordle')
+            ) {
+                unlockApp('henordle');
+                pushNotification(
+                    'Hidden app unlocked',
+                    'Henordle is now available in App Library.'
+                );
+            }
+
             setWindows((prevWindows) => {
                 const highestIndex = getHighestZIndexFrom(prevWindows);
                 const currentWindow = prevWindows[key];
@@ -150,7 +257,13 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                 };
             });
         },
-        [getHighestZIndexFrom, minimizeWindow, onWindowInteract, removeWindow]
+        [
+            getHighestZIndexFrom,
+            minimizeWindow,
+            onWindowInteract,
+            pushNotification,
+            removeWindow,
+        ]
     );
 
     const desktopApps = useMemo(() => getDesktopApps(), []);
@@ -234,6 +347,26 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                 onLaunchApplication={openApplication}
                 featuredApps={featuredApps}
             />
+            <MontaTour
+                session={session}
+                onLaunchApplication={openApplication}
+            />
+            <div style={styles.notifications}>
+                {notifications.map((notification) => (
+                    <div
+                        key={notification.id}
+                        className="big-button-container"
+                        style={styles.notification}
+                    >
+                        <p style={styles.notificationTitle}>
+                            {notification.title}
+                        </p>
+                        <p style={styles.notificationBody}>
+                            {notification.body}
+                        </p>
+                    </div>
+                ))}
+            </div>
         </div>
     ) : (
         <ShutdownSequence
@@ -247,7 +380,7 @@ const styles: StyleSheetCSS = {
     desktop: {
         minHeight: '100%',
         flex: 1,
-        backgroundImage: '../../assets/pictures/currentme.jpg'
+        backgroundImage: '../../assets/pictures/currentme.jpg',
     },
     shutdown: {
         minHeight: '100%',
@@ -275,6 +408,31 @@ const styles: StyleSheetCSS = {
         color: Colors.black,
         fontFamily: 'MSSerif',
         fontSize: 14,
+    },
+    notifications: {
+        position: 'absolute',
+        right: 12,
+        bottom: 44,
+        width: 300,
+        flexDirection: 'column',
+        gap: 8,
+        zIndex: 100001,
+        pointerEvents: 'none',
+    },
+    notification: {
+        flexDirection: 'column',
+        gap: 4,
+        backgroundColor: Colors.lightGray,
+        padding: 12,
+        pointerEvents: 'none',
+    },
+    notificationTitle: {
+        fontFamily: 'MillenniumBold',
+        fontSize: 14,
+    },
+    notificationBody: {
+        fontFamily: 'MSSerif',
+        fontSize: 12,
     },
 };
 
