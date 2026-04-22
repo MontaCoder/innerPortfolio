@@ -1,7 +1,7 @@
 import computerPreview from '../assets/pictures/projects/software/computer.mp4';
 import helloNeighborPreview from '../assets/pictures/projects/software/HelloNeighbor.png';
-import aiMangaStudioPreview from '../assets/pictures/projects/software/AI-Manga-Studio.gif';
-import codeHarborPreview from '../assets/pictures/projects/software/CodeHarborAI.gif';
+import aiMangaStudioPreview from '../assets/pictures/projects/software/AI-Manga-Studio.webp';
+import codeHarborPreview from '../assets/pictures/projects/software/CodeHarborAI.webp';
 
 export interface ProjectCaseStudy {
     slug: string;
