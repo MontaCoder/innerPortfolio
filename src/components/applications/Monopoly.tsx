@@ -1,31 +1,23 @@
-import React, { useState } from 'react';
-import DosPlayer from '../dos/DosPlayer';
-import Window from '../os/Window';
+import React from 'react';
+import DosGameWindow from '../dos/DosGameWindow';
 
 export interface monopolyAppProps extends WindowAppProps {}
 
 const Monopoly: React.FC<monopolyAppProps> = (props) => {
-    const [width, setWidth] = useState(980);
-    const [height, setHeight] = useState(670);
-
     return (
-        <Window
-            top={10}
-            left={10}
-            width={width}
-            height={height}
-            windowTitle="Monopoly"
+        <DosGameWindow
+            {...props}
+            appKey="monopoly"
+            title="Monopoly"
+            icon="monopoly"
             windowBarColor="#1C1C1C"
-            windowBarIcon="windowGameIcon"
-            bottomLeftText={'Powered by JSDOS & DOSBox'}
-            closeWindow={props.onClose}
-            onInteract={props.onInteract}
-            minimizeWindow={props.onMinimize}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-        >
-            <DosPlayer width={width} height={height} bundleUrl="monopoly.jsdos" />
-        </Window>
+            bundleUrl="monopoly.jsdos"
+            instructions={[
+                'Boot the board-game archive when ready.',
+                'Use the emulator controls if the game captures your cursor.',
+                'Game boots count toward hidden app unlocks.',
+            ]}
+        />
     );
 };
 

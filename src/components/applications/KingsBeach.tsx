@@ -1,31 +1,23 @@
-import React, { useState } from 'react';
-import DosPlayer from '../dos/DosPlayer';
-import Window from '../os/Window';
+import React from 'react';
+import DosGameWindow from '../dos/DosGameWindow';
 
 export interface kingsBeachAppProps extends WindowAppProps {}
 
 const KingsBeach: React.FC<kingsBeachAppProps> = (props) => {
-    const [width, setWidth] = useState(980);
-    const [height, setHeight] = useState(670);
-
     return (
-        <Window
-            top={10}
-            left={10}
-            width={width}
-            height={height}
-            windowTitle="kingsBeach"
+        <DosGameWindow
+            {...props}
+            appKey="kingsBeach"
+            title="Kings Beach"
+            icon="kingsBeach"
             windowBarColor="#1C1C1C"
-            windowBarIcon="windowGameIcon"
-            bottomLeftText={'Powered by JSDOS & DOSBox'}
-            closeWindow={props.onClose}
-            onInteract={props.onInteract}
-            minimizeWindow={props.onMinimize}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-        >
-            <DosPlayer width={width} height={height} bundleUrl="kingsBeach.jsdos" />
-        </Window>
+            bundleUrl="kingsBeach.jsdos"
+            instructions={[
+                'A small postcard from the DOS shelf.',
+                'Press Play only when you are ready to load the emulator.',
+                'Try another game afterward to unlock the deeper archive.',
+            ]}
+        />
     );
 };
 

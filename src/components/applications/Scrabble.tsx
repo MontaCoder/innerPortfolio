@@ -1,35 +1,25 @@
-import React, { useState } from 'react';
-import DosPlayer from '../dos/DosPlayer';
-import Window from '../os/Window';
+import React from 'react';
+import DosGameWindow from '../dos/DosGameWindow';
 
 export interface ScrabbleAppProps extends WindowAppProps {}
 
 const ScrabbleApp: React.FC<ScrabbleAppProps> = (props) => {
-    const [width, setWidth] = useState(920);
-    const [height, setHeight] = useState(750);
-
     return (
-        <Window
-            top={10}
-            left={10}
-            width={width}
-            height={height}
-            windowTitle="Scrabble"
-            windowBarIcon="windowGameIcon"
+        <DosGameWindow
+            {...props}
+            appKey="scrabble"
+            title="Scrabble"
+            icon="scrabbleIcon"
             windowBarColor="#941d13"
-            bottomLeftText={'Powered by JSDOS & DOSBox'}
-            closeWindow={props.onClose}
-            onInteract={props.onInteract}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-            minimizeWindow={props.onMinimize}
-        >
-            <DosPlayer
-                width={width}
-                height={height}
-                bundleUrl="scrabble.jsdos"
-            />
-        </Window>
+            bundleUrl="scrabble.jsdos"
+            initialWidth={920}
+            initialHeight={750}
+            instructions={[
+                'Boot the word game from the archive.',
+                'Use keyboard input after the DOS screen is active.',
+                'The first game boot unlocks Henordle.',
+            ]}
+        />
     );
 };
 

@@ -1,31 +1,23 @@
-import React, { useState } from 'react';
-import DosPlayer from '../dos/DosPlayer';
-import Window from '../os/Window';
+import React from 'react';
+import DosGameWindow from '../dos/DosGameWindow';
 
 export interface fifaAppProps extends WindowAppProps {}
 
 const Fifa: React.FC<fifaAppProps> = (props) => {
-    const [width, setWidth] = useState(980);
-    const [height, setHeight] = useState(670);
-
     return (
-        <Window
-            top={10}
-            left={10}
-            width={width}
-            height={height}
-            windowTitle="Fifa"
+        <DosGameWindow
+            {...props}
+            appKey="fifa"
+            title="Fifa"
+            icon="fifa"
             windowBarColor="#1C1C1C"
-            windowBarIcon="windowGameIcon"
-            bottomLeftText={'Powered by JSDOS & DOSBox'}
-            closeWindow={props.onClose}
-            onInteract={props.onInteract}
-            minimizeWindow={props.onMinimize}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-        >
-            <DosPlayer width={width} height={height} bundleUrl="fifa.jsdos" />
-        </Window>
+            bundleUrl="fifa.jsdos"
+            instructions={[
+                'Load the sports archive only when you press Play.',
+                'Keyboard focus moves into the emulator after boot.',
+                'A second game boot unlocks the archive trail.',
+            ]}
+        />
     );
 };
 

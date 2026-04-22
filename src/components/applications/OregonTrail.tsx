@@ -1,31 +1,25 @@
-import React, { useState } from 'react';
-import DosPlayer from '../dos/DosPlayer';
-import Window from '../os/Window';
+import React from 'react';
+import DosGameWindow from '../dos/DosGameWindow';
 
 export interface OregonTrailAppProps extends WindowAppProps {}
 
 const OregonTrailApp: React.FC<OregonTrailAppProps> = (props) => {
-    const [width, setWidth] = useState(920);
-    const [height, setHeight] = useState(750);
-
     return (
-        <Window
-            top={10}
-            left={10}
-            width={width}
-            height={height}
-            windowTitle="The Oregon Trail"
-            windowBarIcon="windowGameIcon"
+        <DosGameWindow
+            {...props}
+            appKey="trail"
+            title="The Oregon Trail"
+            icon="trailIcon"
             windowBarColor="#240C00"
-            bottomLeftText={'Powered by JSDOS & DOSBox'}
-            closeWindow={props.onClose}
-            onInteract={props.onInteract}
-            minimizeWindow={props.onMinimize}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-        >
-            <DosPlayer width={width} height={height} bundleUrl="trail.jsdos" />
-        </Window>
+            bundleUrl="trail.jsdos"
+            initialWidth={920}
+            initialHeight={750}
+            instructions={[
+                'This archive unlocks after you boot two games.',
+                'Press Play to load the trail bundle.',
+                'Pack patience; DOS games take a moment to settle.',
+            ]}
+        />
     );
 };
 

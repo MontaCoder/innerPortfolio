@@ -1,31 +1,23 @@
-import React, { useState } from 'react';
-import DosPlayer from '../dos/DosPlayer';
-import Window from '../os/Window';
+import React from 'react';
+import DosGameWindow from '../dos/DosGameWindow';
 
 export interface DoomAppProps extends WindowAppProps {}
 
 const DoomApp: React.FC<DoomAppProps> = (props) => {
-    const [width, setWidth] = useState(980);
-    const [height, setHeight] = useState(670);
-
     return (
-        <Window
-            top={10}
-            left={10}
-            width={width}
-            height={height}
-            windowTitle="Doom"
+        <DosGameWindow
+            {...props}
+            appKey="doom"
+            title="Doom"
+            icon="doomIcon"
             windowBarColor="#1C1C1C"
-            windowBarIcon="windowGameIcon"
-            bottomLeftText={'Powered by JSDOS & DOSBox'}
-            closeWindow={props.onClose}
-            onInteract={props.onInteract}
-            minimizeWindow={props.onMinimize}
-            onWidthChange={setWidth}
-            onHeightChange={setHeight}
-        >
-            <DosPlayer width={width} height={height} bundleUrl="doom.jsdos" />
-        </Window>
+            bundleUrl="doom.jsdos"
+            instructions={[
+                'Click Play to load the DOS bundle.',
+                'Use the keyboard once the emulator has focus.',
+                'Opening a game unlocks more hidden MontaOS experiments.',
+            ]}
+        />
     );
 };
 
