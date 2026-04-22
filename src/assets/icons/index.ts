@@ -20,6 +20,7 @@ import kingsBeach from './kingsBeach.png';
 import monopoly from './monopoly.png';
 import fifa from './fifa.png';
 import lamborghini from './lamborghini.png';
+import cd from './cd.png';
 const icons = {
     windowResize: windowResize,
     maximize: maximize,
@@ -43,6 +44,7 @@ const icons = {
     monopoly: monopoly,
     fifa: fifa,
     lamborghini: lamborghini,
+    cd: cd,
 };
 
 export type IconName = keyof typeof icons;
